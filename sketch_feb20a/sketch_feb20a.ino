@@ -23,7 +23,7 @@ void setup() {
   // Wake up the MAX7219 from power-saving mode
   for (int device = 0; device < 4; device++) {
     lc.shutdown(device, false);
-    // Set the brightness to a medium value (0 is min, 15 is max)
+    // Set the brightness to a medium value (0 is min, 15 is max)                                                                                                                                                 
     lc.setIntensity(device, 8);
     // Clear the display register
     lc.clearDisplay(device);
