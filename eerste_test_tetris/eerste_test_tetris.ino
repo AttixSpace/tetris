@@ -50,6 +50,22 @@ class Scherm
       // Buiten het spel bord => altijd Vast
       return true;
     }
+
+    void verwijder_volle_lijnen()
+    {
+      for (int y = 0; y < 32; y++)
+      {
+        if (is_lijn_vol(y))
+        {
+          for (int z = y + 1; z < 32; z++)
+          {
+            kopieer_lijn(z, z - 1);
+          }
+          maak_lijn_leeg(31);
+        }
+      }
+    }
+
     void toon()
     {
       for (int y = 0; y < 32; y++)
@@ -83,6 +99,40 @@ class Scherm
     }
 
   private:
+    void kopieer_lijn(int van_y, int naar_y)
+    {
+      for (int x = 0; x < 16; x++)
+      {
+        if (getoonde_stenen[naar_y][x] != getoonde_stenen[van_y][x])
+        {
+          getoonde_stenen[naar_y][x] = getoonde_stenen[van_y][x];
+          zet_led_aan(x, naar_y, getoonde_stenen[naar_y][x] != Leeg);
+        }
+      }
+    }
+
+    void maak_lijn_leeg(int y)
+    {
+      for (int x = 0; x < 16; x++)
+      {
+        if (getoonde_stenen[y][x] != Leeg)
+        {
+          zet_led_aan(x, y, false);
+          getoonde_stenen[y][x] = Leeg;
+        }
+      }
+    }
+
+    bool is_lijn_vol(int y) const
+    {
+      for (int x = 0; x < 16; x++)
+      {
+        if (getoonde_stenen[y][x] != Vast)
+          return false;
+      }
+      return true;
+    }
+
     void zet_led_aan(int x, int y, bool aan)
     {
       bool gebruik_lc1 = (x < 8);
@@ -159,39 +209,35 @@ class Blok
         // Blok past niet: draai terug
         draai_met_klok();
     }
-    void naar_onder(Scherm &scherm)
+    bool naar_onder(const Scherm &scherm)
     {
-      bool bevries_blok = false;
-
       if (pos_y == 0)
-      {
-        // Blok zit al onderaan => zet blok Vast
-        bevries_blok = true;
-      }
-      else
-      {
-        // Laat blok even zakken en check of die nog past.
-        // Als die niet past moeten we de blok bevriezen
-        pos_y--;
+        // Blok zit al onderaan, we kunnen niet meer zakken
+        return false;
 
-        if (!past_op(scherm))
-        {
-          bevries_blok = true;
-          // Blok past niet: zet pos_y weer eentje omhoog
-          pos_y++;
-        }
+      // Laat blok even zakken en check of die nog past.
+      // Als die niet past moeten we de blok bevriezen
+      pos_y--;
+
+      if (!past_op(scherm))
+      {
+        // Blok past niet: zet pos_y weer eentje omhoog
+        pos_y++;
+        return false;
       }
 
-      if (bevries_blok)
+      return true;
+    }
+
+    void bevries(Scherm &scherm)
+    {
+      for (int i = 0; i < 4; ++i)
       {
-        for (int i = 0; i < 4; ++i)
-        {
-          int x = pos_x + steen_pos_x[i];
-          int y = pos_y + steen_pos_y[i];
-          scherm.zet_steen_vast(x, y);
-        }
-        blok_bestaat = false;
+        int x = pos_x + steen_pos_x[i];
+        int y = pos_y + steen_pos_y[i];
+        scherm.zet_steen_vast(x, y);
       }
+      blok_bestaat = false;
     }
 
     bool past_op(const Scherm &scherm) const
@@ -280,7 +326,7 @@ class Spel
       if (!blok.bestaat())
       {
         maak_random_blok();
-        blok.zet_positie(8, 29);
+        blok.zet_positie(8, 30);
         if (!blok.past_op(scherm))
         {
           Serial.println("GAME OVER");
@@ -292,7 +338,11 @@ class Spel
       // Laat blok zakken als het tijd is om hem te laten zakken
       if (millis() >= laat_blok_zakken)
       {
-        blok.naar_onder(scherm);
+        if (!blok.naar_onder(scherm))
+        {
+          blok.bevries(scherm);
+          scherm.verwijder_volle_lijnen();
+        }
         const unsigned long val_snelheid = 200;
         laat_blok_zakken += val_snelheid;
       }
@@ -348,10 +398,10 @@ class Spel
       }
       else if (welke_blok == 3)
       {
-        blok.zet_steen(0, 0, 0);
+        blok.zet_steen(0, 0, -2);
         blok.zet_steen(1, 0, -1);
-        blok.zet_steen(2, 0, 1);
-        blok.zet_steen(3, 0, 2);
+        blok.zet_steen(2, 0, 0);
+        blok.zet_steen(3, 0, 1);
       }
       else if (welke_blok == 4)
       {
