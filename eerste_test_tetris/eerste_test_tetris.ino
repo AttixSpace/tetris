@@ -132,15 +132,32 @@ class Blok
       steen_pos_y[i] = y;
     }
 
-    void naar_links()
+    void naar_links(const Scherm &scherm)
     {
       if (pos_x > 0)
+      {
         pos_x--;
+        if (!past_op(scherm))
+          // Blok past niet: zet terug op oorspronkelijke positie
+          pos_x++;
+      }
     }
-    void naar_rechts()
+    void naar_rechts(const Scherm &scherm)
     {
       if (pos_x < 15)
+      {
         pos_x++;
+        if (!past_op(scherm))
+          // Blok past niet: zet terug op oorspronkelijke positie
+          pos_x--;
+      }
+    }
+    void draai(const Scherm &scherm)
+    {
+      draai_tegen_klok();
+      if (!past_op(scherm))
+        // Blok past niet: draai terug
+        draai_met_klok();
     }
     void naar_onder(Scherm &scherm)
     {
@@ -157,18 +174,9 @@ class Blok
         // Als die niet past moeten we de blok bevriezen
         pos_y--;
 
-        for (int i = 0; i < 4; ++i)
+        if (!past_op(scherm))
         {
-          int x = pos_x + steen_pos_x[i];
-          int y = pos_y + steen_pos_y[i];
-          if (scherm.is_steen_vast(x, y))
-          {
-            bevries_blok = true;
-          }
-        }
-
-        if (bevries_blok)
-        {
+          bevries_blok = true;
           // Blok past niet: zet pos_y weer eentje omhoog
           pos_y++;
         }
@@ -185,22 +193,18 @@ class Blok
         blok_bestaat = false;
       }
     }
-    void draai()
+
+    bool past_op(const Scherm &scherm) const
     {
       for (int i = 0; i < 4; ++i)
       {
-        int x = steen_pos_x[i];
-        int y = steen_pos_y[i];
-
-        // Draai 90 graden naar tegen de klok in
-        steen_pos_x[i] = -y;
-        steen_pos_y[i] = x;
+        int x = pos_x + steen_pos_x[i];
+        int y = pos_y + steen_pos_y[i];
+        if (scherm.is_steen_vast(x, y))
+          return false;
       }
-    }
-
-    bool staat_onderaan() const
-    {
-      return pos_y == 0;
+      // Alle stenen passen => heel de blok past
+      return true;
     }
 
     void toon_op(Scherm &scherm) const
@@ -214,6 +218,31 @@ class Blok
     }
 
   private:
+    void draai_tegen_klok()
+    {
+      for (int i = 0; i < 4; ++i)
+      {
+        int x = steen_pos_x[i];
+        int y = steen_pos_y[i];
+
+        // Draai 90 graden naar tegen de klok in
+        steen_pos_x[i] = -y;
+        steen_pos_y[i] = x;
+      }
+    }
+    void draai_met_klok()
+    {
+      for (int i = 0; i < 4; ++i)
+      {
+        int x = steen_pos_x[i];
+        int y = steen_pos_y[i];
+
+        // Draai 90 graden naar met de klok mee
+        steen_pos_x[i] = y;
+        steen_pos_y[i] = -x;
+      }
+    }
+
     bool blok_bestaat = false;
     int pos_x = 0;
     int pos_y = 0;
@@ -251,6 +280,11 @@ class Spel
       {
         maak_random_blok();
         blok.zet_positie(8, 30);
+        if (!blok.past_op(scherm))
+        {
+          // De nieuwe blok past niet op het scherm => GAME OVER
+          scherm.herstart();
+        }
       }
 
       // Laat blok zakken als het tijd is om hem te laten zakken
@@ -268,19 +302,19 @@ class Spel
 
       if (digitalRead(knop1_input) == LOW)
       { // Programma voor de pull up weerstand.
-        blok.draai();
+        blok.draai(scherm);
         knop_werd_ingeduwd = true;
       }
 
       if (digitalRead(knop3_input) == LOW)
       { // Programma voor de input pull up weerstand.
-        blok.naar_rechts();
+        blok.naar_rechts(scherm);
         knop_werd_ingeduwd = true;
       }
 
       if (digitalRead(knop2_input) == HIGH)
       { // Programma voor de pull down weerstand.
-        blok.naar_links();
+        blok.naar_links(scherm);
         knop_werd_ingeduwd = true;
       }
     }
