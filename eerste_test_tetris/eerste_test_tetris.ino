@@ -280,7 +280,7 @@ class Spel
       if (!blok.bestaat())
       {
         maak_random_blok();
-        blok.zet_positie(8, 30);
+        blok.zet_positie(8, 29);
         if (!blok.past_op(scherm))
         {
           Serial.println("GAME OVER");
