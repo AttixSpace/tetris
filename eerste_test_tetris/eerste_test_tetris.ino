@@ -55,12 +55,11 @@ class Scherm
     {
       for (int y = 0; y < 32; y++)
       {
-        if (is_lijn_vol(y))
+        // Een gewone 'if' is niet voldoende, als de lijn erboven ook vol is, moeten we nog eens checken
+        while (is_lijn_vol(y))
         {
           for (int z = y + 1; z < 32; z++)
-          {
-            kopieer_lijn(z, z - 1);
-          }
+            kopieer_lijn_naar_onder(z);
           maak_lijn_leeg(31);
         }
       }
@@ -99,14 +98,14 @@ class Scherm
     }
 
   private:
-    void kopieer_lijn(int van_y, int naar_y)
+    void kopieer_lijn_naar_onder(int y)
     {
       for (int x = 0; x < 16; x++)
       {
-        if (getoonde_stenen[naar_y][x] != getoonde_stenen[van_y][x])
+        if (getoonde_stenen[y - 1][x] != getoonde_stenen[y][x])
         {
-          getoonde_stenen[naar_y][x] = getoonde_stenen[van_y][x];
-          zet_led_aan(x, naar_y, getoonde_stenen[naar_y][x] != Leeg);
+          getoonde_stenen[y - 1][x] = getoonde_stenen[y][x];
+          zet_led_aan(x, y - 1, getoonde_stenen[y - 1][x] != Leeg);
         }
       }
     }
