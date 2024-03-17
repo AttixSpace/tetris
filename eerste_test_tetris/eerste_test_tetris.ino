@@ -36,7 +36,7 @@ class Scherm
       else
       {
         // Buiten het spel bord => altijd Vast
-        return false;
+        return true;
       }
     }
     void toon()
