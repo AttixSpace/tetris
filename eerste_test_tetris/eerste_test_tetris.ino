@@ -13,6 +13,18 @@ class Scherm
     const uint8_t Los = 1;
     const uint8_t Vast = 2;
 
+    void herstart()
+    {
+      for (int y = 0; y < 32; y++)
+      {
+        for (int x = 0; x < 16; x++)
+        {
+          getoonde_stenen[y][x] = Leeg;
+          nieuwe_stenen[y][x] = Leeg;
+        }
+      }
+    }
+
     void zet_steen_aan(int x, int y)
     {
       if (0 <= x && x < 16 && 0 <= y && y < 32)
@@ -24,20 +36,18 @@ class Scherm
     {
       if (0 <= x && x < 16 && 0 <= y && y < 32)
       {
-        nieuwe_stenen[y][x] = Vast;
+        getoonde_stenen[y][x] = Vast;
+        zet_led_aan(x, y, true);
       }
     }
     bool is_steen_vast(int x, int y) const
     {
       if (0 <= x && x < 16 && 0 <= y && y < 32)
       {
-        return (getoonde_stenen[y][x] == Vast);
+        return getoonde_stenen[y][x] == Vast;
       }
-      else
-      {
-        // Buiten het spel bord => altijd Vast
-        return true;
-      }
+      // Buiten het spel bord => altijd Vast
+      return true;
     }
     void toon()
     {
@@ -217,6 +227,7 @@ class Spel
     void setup()
     {
       setup_knoppen();
+      scherm.herstart();
     }
 
     void loop()
