@@ -255,6 +255,7 @@ class Spel
   public:
     void setup()
     {
+      Serial.println("Start");
       setup_knoppen();
       scherm.herstart();
     }
@@ -282,6 +283,7 @@ class Spel
         blok.zet_positie(8, 30);
         if (!blok.past_op(scherm))
         {
+          Serial.println("GAME OVER");
           // De nieuwe blok past niet op het scherm => GAME OVER
           scherm.herstart();
         }
