@@ -21,6 +21,7 @@ class Scherm
         {
           getoonde_stenen[y][x] = Leeg;
           nieuwe_stenen[y][x] = Leeg;
+          zet_led_aan(x, y, false);
         }
       }
     }
@@ -76,9 +77,7 @@ class Scherm
 
           // Alle nieuwe stenen weer op Leeg zetten
           if (nieuwe_stenen[y][x] != Leeg)
-          {
             nieuwe_stenen[y][x] = Leeg;
-          }
         }
       }
     }
@@ -120,6 +119,7 @@ class Blok
     {
       return blok_bestaat;
     }
+
     void zet_positie(int x, int y)
     {
       pos_x = x;
