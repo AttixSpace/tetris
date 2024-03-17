@@ -93,6 +93,18 @@ class Blok
       if (pos_y > 0)
         pos_y--;
     }
+    void draai()
+    {
+      for (int i = 0; i < 4; ++i)
+      {
+        int x = steen_pos_x[i];
+        int y = steen_pos_y[i];
+
+        // Draai 90 graden naar tegen de klok in
+        steen_pos_x[i] = -y;
+        steen_pos_y[i] = x;
+      }
+    }
 
     bool staat_onderaan() const
     {
@@ -110,7 +122,6 @@ class Blok
     }
 
   private:
-    int draaiing = 0;
     int pos_x = 0;
     int pos_y = 0;
     int steen_pos_x[4] = {};
@@ -171,7 +182,7 @@ class Spel
 
       if (digitalRead(knop1_input) == LOW)
       { // Programma voor de pull up weerstand.
-        blok.naar_onder();
+        blok.draai();
         knop_werd_ingeduwd = true;
       }
 
@@ -190,7 +201,7 @@ class Spel
 
     void maak_random_blok()
     {
-      const long aantal_blokken = 2;
+      const long aantal_blokken = 7;
       const long welke_blok = random(aantal_blokken);
       if (welke_blok == 0)
       {
@@ -204,6 +215,41 @@ class Spel
         blok.zet_steen(0, 0, 0);
         blok.zet_steen(1, 0, 1);
         blok.zet_steen(2, 1, 0);
+        blok.zet_steen(3, 1, 1);
+      }
+      else if (welke_blok == 2)
+      {
+        blok.zet_steen(0, 0, 0);
+        blok.zet_steen(1, -1, 0);
+        blok.zet_steen(2, 1, 0);
+        blok.zet_steen(3, 0, 1);
+      }
+      else if (welke_blok == 3)
+      {
+        blok.zet_steen(0, 0, 0);
+        blok.zet_steen(1, 0, -1);
+        blok.zet_steen(2, 0, 1);
+        blok.zet_steen(3, 0, 2);
+      }
+      else if (welke_blok == 4)
+      {
+        blok.zet_steen(0, 0, 0);
+        blok.zet_steen(1, 0, 1);
+        blok.zet_steen(2, 0, -1);
+        blok.zet_steen(3, 1, 1);
+      }
+      else if (welke_blok == 5)
+      {
+        blok.zet_steen(0, 0, 0);
+        blok.zet_steen(1, 0, 1);
+        blok.zet_steen(2, -1, 1);
+        blok.zet_steen(3, 0, -1);
+      }
+      else if (welke_blok == 6)
+      {
+        blok.zet_steen(0, 0, 0);
+        blok.zet_steen(1, 0, -1);
+        blok.zet_steen(2, -1, 0);
         blok.zet_steen(3, 1, 1);
       }
     }
