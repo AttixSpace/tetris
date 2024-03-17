@@ -146,7 +146,7 @@ class Spel
       scherm.toon();
 
       if (knop_werd_ingeduwd)
-        delay(300);
+        delay(100);
     }
 
   private:
@@ -171,7 +171,7 @@ class Spel
       if (millis() >= laat_blok_zakken)
       {
         blok.naar_onder();
-        const unsigned long val_snelheid = 300;
+        const unsigned long val_snelheid = 200;
         laat_blok_zakken += val_snelheid;
       }
     }
@@ -250,7 +250,7 @@ class Spel
         blok.zet_steen(0, 0, 0);
         blok.zet_steen(1, 0, -1);
         blok.zet_steen(2, -1, 0);
-        blok.zet_steen(3, 1, 1);
+        blok.zet_steen(3, -1, 1);
       }
     }
 
