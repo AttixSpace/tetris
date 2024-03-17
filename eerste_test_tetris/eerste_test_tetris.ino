@@ -174,19 +174,19 @@ void loop()
 
   if (digitalRead(knop1_input) == LOW)
   { // Programma voor de pull up weerstand.
-    b0.naar_links();
+    b0.naar_onder();
     do_delay = true;
   }
 
   if (digitalRead(knop3_input) == LOW)
   { // Programma voor de input pull up weerstand.
-    b0.naar_onder();
+    b0.naar_rechts();
     do_delay = true;
   }
 
   if (digitalRead(knop2_input) == HIGH)
   { // Programma voor de pull down weerstand.
-    b0.naar_rechts();
+    b0.naar_links();
     do_delay = true;
   }
 
