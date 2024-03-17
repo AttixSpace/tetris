@@ -8,10 +8,36 @@ LedControl lc2 = LedControl(10, 8, 9, 4);
 class Scherm
 {
   public:
-    void zet_led_aan(int x, int y)
+    // Verschillende soorten stenen die in een vakje kunnen zitten
+    const uint8_t Leeg = 0;
+    const uint8_t Los = 1;
+    const uint8_t Vast = 2;
+
+    void zet_steen_aan(int x, int y)
     {
       if (0 <= x && x < 16 && 0 <= y && y < 32)
-        new_[y][x] = true;
+      {
+        nieuwe_stenen[y][x] = Los;
+      }
+    }
+    void zet_steen_vast(int x, int y)
+    {
+      if (0 <= x && x < 16 && 0 <= y && y < 32)
+      {
+        nieuwe_stenen[y][x] = Vast;
+      }
+    }
+    bool is_steen_vast(int x, int y) const
+    {
+      if (0 <= x && x < 16 && 0 <= y && y < 32)
+      {
+        return (getoonde_stenen[y][x] == Vast);
+      }
+      else
+      {
+        // Buiten het spel bord => altijd Vast
+        return false;
+      }
     }
     void toon()
     {
@@ -19,23 +45,36 @@ class Scherm
       {
         for (int x = 0; x < 16; x++)
         {
-          if (new_[y][x] != old_[y][x])
+          if (getoonde_stenen[y][x] == Vast)
           {
-            set_led_(x, y, new_[y][x]);
-            old_[y][x] = new_[y][x];
+            // Steen is Vast => we mogen die niet aanpassen
+          }
+          else if (nieuwe_stenen[y][x] == Vast)
+          {
+            zet_led_aan(x, y, true);
+            getoonde_stenen[y][x] = Vast;
+          }
+          else
+          {
+            if (nieuwe_stenen[y][x] != getoonde_stenen[y][x])
+            {
+              const bool led_aan = (nieuwe_stenen[y][x] == Los);
+              zet_led_aan(x, y, led_aan);
+              getoonde_stenen[y][x] = nieuwe_stenen[y][x];
+            }
           }
 
-          // alle new op uit zetten.
-          if (new_[y][x] == true)
+          // Alle nieuwe stenen weer op Leeg zetten
+          if (nieuwe_stenen[y][x] != Leeg)
           {
-            new_[y][x] = false;
+            nieuwe_stenen[y][x] = Leeg;
           }
         }
       }
     }
 
   private:
-    void set_led_(int x, int y, bool aan)
+    void zet_led_aan(int x, int y, bool aan)
     {
       bool gebruik_lc1 = (x < 8);
 
@@ -60,17 +99,22 @@ class Scherm
       }
     }
 
-    bool old_[32][16] = {};
-    bool new_[32][16] = {};
+    uint8_t getoonde_stenen[32][16] = {Leeg};
+    uint8_t nieuwe_stenen[32][16] = {Leeg};
 };
 
 class Blok
 {
   public:
+    bool bestaat() const
+    {
+      return blok_bestaat;
+    }
     void zet_positie(int x, int y)
     {
       pos_x = x;
       pos_y = y;
+      blok_bestaat = true;
     }
     void zet_steen(int i, int x, int y)
     {
@@ -88,10 +132,48 @@ class Blok
       if (pos_x < 15)
         pos_x++;
     }
-    void naar_onder()
+    void naar_onder(Scherm &scherm)
     {
-      if (pos_y > 0)
+      bool bevries_blok = false;
+
+      if (pos_y == 0)
+      {
+        // Blok zit al onderaan => zet blok Vast
+        bevries_blok = true;
+      }
+      else
+      {
+        // Laat blok even zakken en check of die nog past.
+        // Als die niet past moeten we de blok bevriezen
         pos_y--;
+
+        for (int i = 0; i < 4; ++i)
+        {
+          int x = pos_x + steen_pos_x[i];
+          int y = pos_y + steen_pos_y[i];
+          if (scherm.is_steen_vast(x, y))
+          {
+            bevries_blok = true;
+          }
+        }
+
+        if (bevries_blok)
+        {
+          // Blok past niet: zet pos_y weer eentje omhoog
+          pos_y++;
+        }
+      }
+
+      if (bevries_blok)
+      {
+        for (int i = 0; i < 4; ++i)
+        {
+          int x = pos_x + steen_pos_x[i];
+          int y = pos_y + steen_pos_y[i];
+          scherm.zet_steen_vast(x, y);
+        }
+        blok_bestaat = false;
+      }
     }
     void draai()
     {
@@ -117,11 +199,12 @@ class Blok
       {
         int x = pos_x + steen_pos_x[i];
         int y = pos_y + steen_pos_y[i];
-        scherm.zet_led_aan(x, y);
+        scherm.zet_steen_aan(x, y);
       }
     }
 
   private:
+    bool blok_bestaat = false;
     int pos_x = 0;
     int pos_y = 0;
     int steen_pos_x[4] = {};
@@ -152,25 +235,17 @@ class Spel
   private:
     void behandel_blok()
     {
-      // Verwijder blok als die helemaal onderaan staat
-      if (blok_bestaat)
-      {
-        if (blok.staat_onderaan())
-          blok_bestaat = false;
-      }
-
       // Maak blok aan als die nog niet bestaat
-      if (!blok_bestaat)
+      if (!blok.bestaat())
       {
         maak_random_blok();
         blok.zet_positie(8, 30);
-        blok_bestaat = true;
       }
 
       // Laat blok zakken als het tijd is om hem te laten zakken
       if (millis() >= laat_blok_zakken)
       {
-        blok.naar_onder();
+        blok.naar_onder(scherm);
         const unsigned long val_snelheid = 200;
         laat_blok_zakken += val_snelheid;
       }
@@ -287,7 +362,6 @@ class Spel
     Scherm scherm;
 
     Blok blok;
-    bool blok_bestaat = false;
 
     bool knop_werd_ingeduwd = false;
 
